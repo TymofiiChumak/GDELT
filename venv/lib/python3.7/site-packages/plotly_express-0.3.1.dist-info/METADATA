@@ -1,0 +1,48 @@
+Metadata-Version: 2.1
+Name: plotly-express
+Version: 0.3.1
+Summary: Plotly Express - a high level wrapper for Plotly.py
+Home-page: https://plotly.express/
+Author: Nicolas Kruchten
+Author-email: nicolas@plot.ly
+License: MIT
+Project-URL: Github, https://github.com/plotly/plotly_express/
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - Beta
+Classifier: Topic :: Scientific/Engineering :: Visualization
+Classifier: License :: OSI Approved :: MIT License
+Description-Content-Type: text/markdown
+Requires-Dist: pandas (>=0.20.0)
+Requires-Dist: plotly (<4.0.0a0,>=3.10.0)
+Requires-Dist: statsmodels (>=0.9.0)
+Requires-Dist: scipy (>=0.18)
+Requires-Dist: patsy (>=0.5)
+Requires-Dist: numpy (>=1.11)
+
+# Plotly Express
+
+Plotly Express is a terse, consistent, high-level wrapper around [Plotly.py](https://plot.ly/python) for rapid data exploration and figure generation.
+
+Documentation and examples can be found at https://plotly.express/
+
+## Installation
+
+Plotly Express is compatible with Python 3+ and Python 2.7.
+
+### Via `pip`
+
+Just running `pip install plotly_express` in your terminal should do it!
+
+### Via `conda`
+
+You'll have to install from the `plotly` channel with `conda install -c plotly plotly_express`
+
+### Running in JupyterLab
+
+Using Plotly Express in JupyterLab requires the [`plotly-extension`](https://github.com/jupyterlab/jupyter-renderers/tree/master/packages/plotly-extension) to be installed by running `jupyter labextension install @jupyterlab/plotly-extension`.
+
+## Troubleshooting
+
+Plotly Express depends on very recent versions of `plotly` and it's sometimes possible to get into a state where you have multiple versions of `plotly` installed (e.g. once with `pip` and once with `conda`) so be sure to check your version by running `plotly.__version__` in the same environment that you're having issues with `plotly_express`.
+
+

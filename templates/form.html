@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+    <title>Set parameters</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script type="text/javascript" src="http://code.jquery.com/jquery-latest.min.js"></script>
+    <link href="{% static "GDELT/css/datepicker.css" %}" rel="stylesheet" type="text/css">
+    <script src="{% static "GDELT/js/datepicker.js" %}"></script>
+    <script src="{% static "GDELT/js/datepicker.en.js" %}"></script>
+</head>
+<body>
+<div class="container-fluid">
+	<div class="row">
+		<div class="col-md-3">
+		</div>
+		<div class="col-md-6" id="param_list">
+                {{ fields }}
+				<button type="submit" class="btn btn-primary" id="SubmitButton">
+					Submit
+				</button>
+		</div>
+		<div class="col-md-3">
+		</div>
+	</div>
+</div>
+<script>
+    document.getElementById("SubmitButton").onclick = openPlot;
+    function processResponse(xhr) {
+        return function() {
+            let json = JSON.parse(xhr.responseText);
+            if (json.status === "ok") {
+                window.location.replace("/loading/" + json.function + "/" + json.job_uuid);
+            } else {
+                let warning = document.getElementById("warning");
+                if (warning == null) {
+                    warning = document.createElement("div");
+                    warning.id = "warning";
+                    warning.className = "alert alert-danger";
+                }
+                warning.innerText = json.error;
+                let submit_button = document.getElementById("SubmitButton");
+                document.getElementById("param_list").insertBefore(warning, submit_button);
+                document.getElementById(json.id).style.color = "red";
+            }
+        }
+    }
+    function openPlot() {
+        var request = {};
+        let params = document.getElementsByClassName("param");
+        for (let i = 0; i < params.length; i++){
+            request[params[i].id]= params[i].value;
+        }
+        let xhr = new XMLHttpRequest();
+        let url = "/plot_request/{{ function }}";
+        xhr.open("POST", url, true);
+        xhr.onload = processResponse(xhr);
+        let data = JSON.stringify(request);
+        xhr.send(data);
+    }
+    function openPlotPage(function_name, job_uuid){
+
+    }
+</script>
+</body>
+</html>

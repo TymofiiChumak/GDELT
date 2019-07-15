@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+<head>
+    <meta charset="UTF-8">
+        <title>Loading</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="{% static "GDELT/css/spin.css" %}">
+</head>
+<body>
+<div class="row">
+    <div class="col-md-2"></div>
+    <div class="col-md-8" id="container">
+        <h1>Loading</h1>
+        <div id="spinnerContainer" class="spinner" style="width:100px;height:100px;">
+</div>
+    </div>
+    <div class="col-md-2"></div>
+</div>
+<script type="module">
+    import {Spinner} from '{% static "GDELT/js/spin.js" %}';
+    window.onload = function () {
+        let opts = {
+            lines: 13, // The number of lines to draw
+            length: 38, // The length of each line
+            width: 17, // The line thickness
+            radius: 45, // The radius of the inner circle
+            scale: 1, // Scales overall size of the spinner
+            corners: 1, // Corner roundness (0..1)
+            color: '#000000', // CSS color or array of colors
+            fadeColor: '#888888', // CSS color or array of colors
+            speed: 1, // Rounds per second
+            rotate: 0, // The rotation offset
+            animation: 'spinner-line-fade-quick', // The CSS animation name for the lines
+            direction: 1, // 1: clockwise, -1: counterclockwise
+            zIndex: 2e9, // The z-index (defaults to 2000000000)
+            className: 'spinner', // The CSS class to assign to the spinner
+            top: '150%', // Top position relative to parent
+            left: '50%', // Left position relative to parent
+            shadow: '0 0 1px transparent', // Box-shadow for the lines
+            position: 'absolute', // Element positioning
+            visibility: true
+        };
+
+        let target = document.getElementById('spinnerContainer');
+        let spinner = new Spinner(opts).spin(target);
+        console.log(spinner.el);
+    };
+    let href = window.location.href.split("/");
+    let function_name = href[href.length - 2];
+    let job_uuid = href[href.length - 1];
+    let xhr = new XMLHttpRequest();
+    let url = "/wait_for_plot/";
+    xhr.open("POST", url, true);
+    xhr.onload = function () {
+        let json = JSON.parse(xhr.responseText);
+        console.log(json);
+        if (json.status === "ok"){
+            window.location.replace("/plot/" + function_name + "/" + job_uuid);
+        }else{
+            let warning = document.createElement("div");
+            warning.id = "warning";
+            warning.className = "alert alert-danger";
+            warning.innerText = json.message;
+            document.getElementById("param_list").appendChild(warning)
+        }
+    };
+    let request = {"function": function_name,
+               "job_uuid": job_uuid};
+    let data = JSON.stringify(request);
+    xhr.send(data);
+</script>
+</body>
+</html>
