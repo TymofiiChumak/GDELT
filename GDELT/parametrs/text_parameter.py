@@ -3,7 +3,7 @@ from .parameter import Parameter
 
 class TextParameter(Parameter):
     def __init__(self, value):
-        self.value = value
+        Parameter.__init__(self, value)
 
     @staticmethod
     def get_field_code(params, default_value):

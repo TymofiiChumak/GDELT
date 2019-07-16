@@ -3,6 +3,7 @@ from threading import Lock
 import uuid
 from ..utils.utils import Singleton
 from .event_count import EventCount
+from .coutry_connection_count import CountryConnectionCount
 
 
 class FunctionUtil(metaclass=Singleton):
@@ -10,7 +11,8 @@ class FunctionUtil(metaclass=Singleton):
     def __init__(self):
         self.function_pool = FunctionPool(self.get_plot)
         self.function_list = [
-            ('event_count', EventCount())
+            ('event_count', EventCount()),
+            ('country_connection_count', CountryConnectionCount())
         ]
 
     def get_function_by_name(self, function_name):

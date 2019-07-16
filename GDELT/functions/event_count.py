@@ -1,7 +1,7 @@
 import plotly.plotly
 import plotly_express as px
 from ..utils.utils import QueryExecutor
-from ..parametrs.date_parameter import DateTimeParameter
+from ..parametrs.date_parameters import DateRangeParameter
 from .function import Function
 import time
 
@@ -19,25 +19,24 @@ class EventCount(Function):
 
     def get_plot(self, parameters):
         qe = QueryExecutor()
-        query = self.query.format(parameters['start'].value, parameters['end'].value)
+        start, end = parameters['range'].value
+        query = self.query.format(start, end)
         df = qe.get_result_dataframe(query, month_year_cols=['Date'])
         fig = px.line(df, x='Date', y='EventCount')
         return plotly.offline.plot(fig, include_plotlyjs=True, output_type='div')
-        # time.sleep(200)
+        # time.sleep(5)
         # return "<h1>Loaded</h1>"
 
     @staticmethod
     def get_parameters():
         return [
-            (DateTimeParameter, ('start', 'Start Time')),
-            (DateTimeParameter, ('end', 'End Time'))
+            (DateRangeParameter, ('range', 'Time range')),
         ]
 
     @staticmethod
     def get_default_parameters():
         return {
-            'start': "20130101",
-            'end': "20190101",
+            'range': ("20130101", "20190101"),
         }
 
     @staticmethod
@@ -46,7 +45,7 @@ class EventCount(Function):
 
     @staticmethod
     def get_description():
-        return """Description of function"""
+        return """Number of events in database for each month for range of time"""
 
     @staticmethod
     def check_params(params):

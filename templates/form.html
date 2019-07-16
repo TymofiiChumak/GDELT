@@ -9,6 +9,8 @@
     <link href="{% static "GDELT/css/datepicker.css" %}" rel="stylesheet" type="text/css">
     <script src="{% static "GDELT/js/datepicker.js" %}"></script>
     <script src="{% static "GDELT/js/datepicker.en.js" %}"></script>
+    <link rel="stylesheet" href="{% static "GDELT/css/awesomplete.css" %}" />
+    <script src="{% static "GDELT/js/awesomplete.js" %}" async></script>
 </head>
 <body>
 <div class="container-fluid">
@@ -59,9 +61,41 @@
         let data = JSON.stringify(request);
         xhr.send(data);
     }
-    function openPlotPage(function_name, job_uuid){
-
+    // Restricts input for the given textbox to the given inputFilter.
+    function setInputFilter(textbox, inputFilter) {
+      ["input", "keydown", "keyup", "mousedown", "mouseup", "select", "contextmenu", "drop"].forEach(function(event) {
+        textbox.addEventListener(event, function() {
+          if (inputFilter(this.value)) {
+            this.oldValue = this.value;
+            this.oldSelectionStart = this.selectionStart;
+            this.oldSelectionEnd = this.selectionEnd;
+          } else if (this.hasOwnProperty("oldValue")) {
+            this.value = this.oldValue;
+            this.setSelectionRange(this.oldSelectionStart, this.oldSelectionEnd);
+          }
+        });
+      });
     }
+    let intFilter = function(value) { return /^\d*$/.test(value); };
+    let intParameters = document.getElementsByClassName("int_field");
+    for (let i=0; i<intParameters.length; i++){
+        setInputFilter(intParameters[i], intFilter);
+    }
+
+    let floatFilter = function(value) { return /^\d*\.?\d*$/.test(value); };
+    let floatParameters = document.getElementsByClassName("float_field");
+    for (let i=0; i<floatParameters.length; i++){
+        setInputFilter(floatParameters[i], floatFilter);
+    }
+    let parameters = document.getElementsByClassName("param");
+    for (let i=0; i<parameters.length; i++){
+        parameters[i].addEventListener("keydown", function (e) {
+            if (e.keyCode === 13) {
+                openPlot();
+            }
+        });
+    }
+
 </script>
 </body>
 </html>

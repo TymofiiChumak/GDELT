@@ -94,7 +94,7 @@ class Utils:
         if hasattr(self, "cameo_eventcodes_id_to_name_mapping"):
             return self.cameo_eventcodes_id_to_base_mapping
         else:
-            cameo_eventcodes_df = pd.read_csv(resource_path + '/' + cameo_eventcodes, sep='\t')
+            cameo_eventcodes_df = pd.read_csv(resource_path + '/' + cameo_eventcodes, sep='\t', dtype='str')
             cameo_eventcodes_df['CAMEOBASECODE'] = cameo_eventcodes_df['CAMEOEVENTCODE'].apply(lambda code: code[:2])
             self.cameo_eventcodes_id_to_base_mapping = cameo_eventcodes_df.groupby('CAMEOEVENTCODE')['CAMEOBASECODE'].first()
             del(cameo_eventcodes_df)
