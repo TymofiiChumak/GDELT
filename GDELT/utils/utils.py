@@ -4,7 +4,9 @@ from google.cloud import bigquery
 from threading import Lock
 
 resource_path = "GDELT/resources"
-bigquery_credentials = "GDELT2-c60e8f0ed67d.json"
+bigquery_credentials = "google_cloud_credentials.json"
+mapbox_token = "mapbox_token"
+
 cameo_country = "CAMEO.country.csv"
 cameo_ethic = "CAMEO.ethnic.csv"
 cameo_eventcodes = "CAMEO.eventcodes.csv"
@@ -138,3 +140,11 @@ class Utils:
             self.fips_region_id_to_name_mapping = fips_region_df.groupby('region_code')['region_name'].first()
             del (fips_region_df)
             return self.fips_region_id_to_name_mapping
+
+    def get_mapbox_token(self):
+        if hasattr(self, "mapbox_token"):
+            return self.mapbox_token
+        else:
+            with open(resource_path + '/' + mapbox_token, 'r') as source:
+                self.mapbox_token = source.read()
+                return self.mapbox_toke
