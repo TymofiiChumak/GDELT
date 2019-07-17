@@ -26,8 +26,12 @@ class GenericCategoryParameter(TextParameter):
         test_form_field = """
         {4}
         <div class="form-group">
-            <label for="{0}"> {1} </label>
-            <input type="text" class="form-control param awesomplete {5}" id="{0}" value="{2}" list="{3}" />
+            <label for="{0}" style="width:100%; vertical-align: middle;"> {1} </label>
+            <input type="text" 
+                   class="form-control param awesomplete {5}" 
+                   id="{0}" 
+                   value="{2}" 
+                   list="{3}"/>
         </div>""".format(param_id, label, default_value, datalist_id, datalist, multiple_data)
         return test_form_field
 

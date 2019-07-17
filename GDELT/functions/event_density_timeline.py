@@ -1,8 +1,7 @@
 from ..utils.utils import QueryExecutor
-from mapboxgl.utils import *
-from mapboxgl.viz import HeatmapViz
-from numpy import unique
-import re
+import folium
+import folium.plugins as plugins
+from numpy import log
 from ..parametrs.date_parameters import DateRangeParameter
 from ..parametrs.category_parameters import FipsCountryParameter, QuadClassParameter, CameoEventcodeBaseParameter
 from .function import Function
@@ -11,9 +10,9 @@ from ..utils.utils import Utils
 import pandas as pd
 
 
-class EventDensityByCountry(Function):
+class EventDensityTimeline(Function):
     def _build_qeury(self, params):
-        query = """SELECT ActionGeo_Lat AS lat, ActionGeo_Long AS lon, COUNT(*) AS EventCount
+        query = """SELECT MonthYear, ActionGeo_Lat AS lat, ActionGeo_Long AS lon, COUNT(*) AS EventCount
         FROM `gdelt-bq.full.events`
         WHERE SQLDATE >= {0}
         AND SQLDATE < {1}
@@ -30,48 +29,51 @@ class EventDensityByCountry(Function):
                 column_name, params[param_name].value
             )
         query += """
-        GROUP BY lat, lon
-        ORDER BY lat, lon"""
+        GROUP BY MonthYear, lat, lon
+        ORDER BY MonthYear, lat, lon"""
         return query
 
     def get_plot(self, parameters):
-        #qe = QueryExecutor()
-        #df = qe.get_result_dataframe(self._build_qeury(parameters))
-        df = pd.read_csv("tmp.csv")
+        qe = QueryExecutor()
+        df = qe.get_result_dataframe(self._build_qeury(parameters))
 
         min_lon, max_lon = df.lon.quantile([0.01, 0.99])
+        delta_lon = max_lon - min_lon
         min_lat, max_lat = df.lat.quantile([0.01, 0.99])
-        center = ((min_lon + max_lon) / 2, (min_lat + max_lat) / 2)
+        delta_lat = max_lat - min_lat
+        center = ((min_lat + max_lat) / 2, (min_lon + max_lon) / 2)
         df = df[(df.lon >= min_lon) & (df.lon <= max_lon) & (df.lat >= min_lat) & (df.lat <= max_lat)]
 
-        geojson = df_to_geojson(df,
-                                properties=['EventCount'],
-                                lat='lat',
-                                lon='lon',
-                                precision=3)
+        df['EventCount'] = log(df['EventCount'])
+        df['EventCount'] = df['EventCount'] / df['EventCount'].max()
+        timeline = []
+        months = list(sorted(df['MonthYear'].unique()))
+        for month in months:
+            month_counts = df[df['MonthYear'] == month][['lat', 'lon', 'EventCount']].values
+            timeline.append(list(map(list, month_counts)))
 
-        heatmap_color_stops = create_color_stops([0.01, 0.25, 0.5, 0.75, 1], colors='RdPu')
-        heatmap_radius_stops = [[0, 1], [14, 70]]
+        m = folium.Map(center,
+                       tiles='stamentoner',
+                       control_scale=True,
+                       height="75%"
+                       )
 
-        color_breaks = unique([round(df['EventCount'].quantile(q=x * 0.1), 2) for x in range(2, 10)])
-        color_stops = create_color_stops(color_breaks, colors='Spectral')
-
-        heatmap_weight_stops = create_weight_stops(color_breaks)
-
-        viz = HeatmapViz(geojson,
-                         access_token=Utils().get_mapbox_token(),
-                         weight_property='EventCount',
-                         weight_stops=heatmap_weight_stops,
-                         color_stops=heatmap_color_stops,
-                         radius_stops=heatmap_radius_stops,
-                         opacity=0.8,
-                         center=center,
-                         zoom=6,
-                         below_layer='waterway-label')
-
-        viz.height = "500px"
-
-        return viz.as_iframe(viz.create_html())
+        m.fit_bounds([
+            [min_lat - 0.1 * delta_lat, max_lat + 0.1 * delta_lat],
+            [min_lon - 0.1 * delta_lon, max_lon + 0.1 * delta_lon],
+        ])
+        months = Utils().format_months_names(months)
+        hm = plugins.HeatMapWithTime(
+            data=timeline,
+            index=months,
+            name="heatmap",
+            radius=0.3,
+            scale_radius=True,
+            overlay=True,
+        )
+        hm.add_to(m)
+        m.render()
+        return m._repr_html_().replace('"', "'")
 
     @staticmethod
     def get_parameters():
@@ -101,11 +103,11 @@ class EventDensityByCountry(Function):
 
     @staticmethod
     def get_name():
-        return """Event density by country"""
+        return """Event density timeline"""
 
     @staticmethod
     def get_description():
-        return """Event density by country"""
+        return """Event density heatmap by country for each month"""
 
     @staticmethod
     def check_params(params):

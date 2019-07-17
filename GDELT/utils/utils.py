@@ -1,4 +1,4 @@
-import numpy as np
+from calendar import month_name
 import pandas as pd
 from google.cloud import bigquery
 from threading import Lock
@@ -162,6 +162,15 @@ class Utils:
     def get_quad_class_mapping(self):
         return pd.Series(['Verbal Cooperation', 'Material Cooperation', 'Verbal Conflict', 'Material Conflict'],
                          index=[1, 2, 3, 4])
+
+    def format_months_names(self, months):
+        def fotmat_month(month_year):
+            month_year = str(int(month_year))
+            year = month_year[:4]
+            month = int(month_year[4:])
+            return month_name[month] + ', ' + year
+        return list(map(fotmat_month, months))
+
 
     def get_mapbox_token(self):
         if hasattr(self, "mapbox_token"):
