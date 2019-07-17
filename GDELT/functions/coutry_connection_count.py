@@ -1,4 +1,4 @@
-import plotly.plotly
+from plotly.offline import plot
 import plotly.graph_objs as go
 import numpy as np
 from ..utils.utils import QueryExecutor
@@ -73,7 +73,7 @@ class CountryConnectionCount(Function):
         fig = go.Figure(data=data,
                         layout=layout)
 
-        return plotly.offline.plot(fig, include_plotlyjs=True, output_type='div')
+        return plot(fig, include_plotlyjs=True, output_type='div')
 
     @staticmethod
     def get_parameters():

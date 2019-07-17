@@ -1,4 +1,4 @@
-import plotly.plotly
+from plotly.offline import plot
 import plotly_express as px
 from ..utils.utils import QueryExecutor
 from ..parametrs.date_parameters import DateRangeParameter
@@ -23,7 +23,7 @@ class EventCount(Function):
         query = self.query.format(start, end)
         df = qe.get_result_dataframe(query, month_year_cols=['Date'])
         fig = px.line(df, x='Date', y='EventCount')
-        return plotly.offline.plot(fig, include_plotlyjs=True, output_type='div')
+        return plot(fig, include_plotlyjs=True, output_type='div')
         # time.sleep(5)
         # return "<h1>Loaded</h1>"
 

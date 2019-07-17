@@ -1,4 +1,4 @@
-import plotly.plotly
+from plotly.offline import plot
 import plotly_express as px
 import pandas as pd
 import numpy as np
@@ -56,7 +56,7 @@ class EventCountByCountry(Function):
                 parameters['actor_type'].value
             )
         )
-        return plotly.offline.plot(fig, include_plotlyjs=True, output_type='div')
+        return plot(fig, include_plotlyjs=True, output_type='div')
 
     @staticmethod
     def get_parameters():
