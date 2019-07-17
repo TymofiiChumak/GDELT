@@ -12,7 +12,6 @@
     <link rel="stylesheet" href="{% static "GDELT/css/awesomplete.css" %}" />
     <script src="{% static "GDELT/js/awesomplete.js" %}" async></script>
 </head>
-<body>
 <div class="container-fluid">
 	<div class="row">
 		<div class="col-md-3">
@@ -89,13 +88,32 @@
     }
     let parameters = document.getElementsByClassName("param");
     for (let i=0; i<parameters.length; i++){
-        parameters[i].addEventListener("keydown", function (e) {
-            if (e.keyCode === 13) {
-                openPlot();
+        if (!parameters[i].classList.contains("awesomplete")) {
+            parameters[i].addEventListener("keydown", function (e) {
+                if (e.keyCode === 13) {
+                    openPlot();
+                }
+            });
+        }
+    }
+</script>
+<script src="http://leaverou.github.io/awesomplete/awesomplete.js"></script>
+<script>
+    cat_fields = document.getElementsByClassName("data-multiple");
+    for (let i=0; i<cat_fields.length; i++) {
+        new Awesomplete(cat_fields[i], {
+            filter: function (text, input) {
+                return Awesomplete.FILTER_CONTAINS(text, input.match(/[^;]*$/)[0]);
+            },
+            item: function (text, input) {
+                return Awesomplete.ITEM(text, input.match(/[^;]*$/)[0]);
+            },
+            replace: function (text) {
+                var before = this.input.value.match(/^.+;\s*|/)[0];
+                this.input.value = before + text + ";";
             }
         });
     }
-
 </script>
 </body>
 </html>

@@ -15,6 +15,7 @@ cameo_religion = "CAMEO.religion.csv"
 cameo_type = "CAMEO.type.csv"
 fips_country = "FIPS.country.csv"
 fips_region = "FIPS.region.csv"
+fips_iso = "fips-iso-country.csv"
 
 
 class Singleton(type):
@@ -102,6 +103,16 @@ class Utils:
             del(cameo_eventcodes_df)
             return self.cameo_eventcodes_id_to_base_mapping
 
+    def get_cameo_base_eventcodes_id_to_name_mapping(self):
+        if hasattr(self, "cameo_eventcodes_id_to_name_mapping"):
+            return self.cameo_base_eventcodes_id_to_name_mapping
+        else:
+            cameo_eventcodes_df = pd.read_csv(resource_path + '/' + cameo_eventcodes, sep='\t', dtype='str')
+            cameo_eventcodes_df = cameo_eventcodes_df[cameo_eventcodes_df['CAMEOEVENTCODE'].str.len() == 2]
+            self.cameo_base_eventcodes_id_to_name_mapping = cameo_eventcodes_df.groupby('CAMEOEVENTCODE')['EVENTDESCRIPTION'].first()
+            del(cameo_eventcodes_df)
+            return self.cameo_base_eventcodes_id_to_name_mapping
+
 
     def get_cameo_knowngroups_id_to_name_mapping(self):
         if hasattr(self, "cameo_knowngroups_id_to_name_mapping"):
@@ -141,10 +152,21 @@ class Utils:
             del (fips_region_df)
             return self.fips_region_id_to_name_mapping
 
+    def get_fips_iso_mapping(self):
+        if hasattr(self, "fips_iso_mapping"):
+            return self.fips_iso_mapping
+        else:
+            self.fips_iso_mapping = pd.read_csv(resource_path + '/' + fips_iso, index_col='FIPS')['ISO']
+            return self.fips_iso_mapping
+
+    def get_quad_class_mapping(self):
+        return pd.Series(['Verbal Cooperation', 'Material Cooperation', 'Verbal Conflict', 'Material Conflict'],
+                         index=[1, 2, 3, 4])
+
     def get_mapbox_token(self):
         if hasattr(self, "mapbox_token"):
             return self.mapbox_token
         else:
             with open(resource_path + '/' + mapbox_token, 'r') as source:
                 self.mapbox_token = source.read()
-                return self.mapbox_toke
+                return self.mapbox_token

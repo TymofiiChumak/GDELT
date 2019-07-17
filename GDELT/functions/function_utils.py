@@ -4,6 +4,8 @@ import uuid
 from ..utils.utils import Singleton
 from .event_count import EventCount
 from .coutry_connection_count import CountryConnectionCount
+from .event_count_by_country import EventCountByCountry
+from .event_density_by_country import EventDensityByCountry
 
 
 class FunctionUtil(metaclass=Singleton):
@@ -12,7 +14,9 @@ class FunctionUtil(metaclass=Singleton):
         self.function_pool = FunctionPool(self.get_plot)
         self.function_list = [
             ('event_count', EventCount()),
-            ('country_connection_count', CountryConnectionCount())
+            ('country_connection_count', CountryConnectionCount()),
+            ('event_count_by_country', EventCountByCountry()),
+            ('event_density_by_country', EventDensityByCountry()),
         ]
 
     def get_function_by_name(self, function_name):

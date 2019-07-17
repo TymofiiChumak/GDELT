@@ -8,7 +8,7 @@ fu = FunctionUtil()
 
 def make_card(name, label, description):
     card = """
-    <div class="card">
+    <div class="card" style="height: 250px">
         <h5 class="card-header">
             {0}
         </h5>
