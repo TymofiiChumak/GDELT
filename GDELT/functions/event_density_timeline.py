@@ -59,8 +59,8 @@ class EventDensityTimeline(Function):
                        )
 
         m.fit_bounds([
-            [min_lat - 0.1 * delta_lat, max_lat + 0.1 * delta_lat],
             [min_lon - 0.1 * delta_lon, max_lon + 0.1 * delta_lon],
+            [min_lat - 0.1 * delta_lat, max_lat + 0.1 * delta_lat],
         ])
         months = Utils().format_months_names(months)
         hm = plugins.HeatMapWithTime(

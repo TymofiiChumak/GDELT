@@ -4,7 +4,7 @@ import uuid
 from ..utils.utils import Singleton
 from .event_count import EventCount
 from .coutry_connection_count import CountryConnectionCount
-from .event_count_by_country import EventCountByCountry
+from .country_relations import CountryRelations
 from .event_density_by_country import EventDensityByCountry
 from .event_density_timeline import EventDensityTimeline
 from .events_corelation import EventCorrelation
@@ -17,7 +17,7 @@ class FunctionUtil(metaclass=Singleton):
         self.function_list = [
             ('event_count', EventCount()),
             ('country_connection_count', CountryConnectionCount()),
-            ('event_count_by_country', EventCountByCountry()),
+            ('event_count_by_country', CountryRelations()),
             ('event_density_by_country', EventDensityByCountry()),
             ('event_density_timeline', EventDensityTimeline()),
             ('event_correlation', EventCorrelation())

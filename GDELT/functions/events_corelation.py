@@ -1,7 +1,9 @@
 from plotly.offline import plot
 import plotly_express as px
+import pandas as pd
 from ..utils.utils import QueryExecutor, Utils
 from ..parametrs.date_parameters import MonthParameter
+from ..parametrs.category_parameters import GenericCategoryParameter
 from .function import Function
 
 
@@ -45,15 +47,15 @@ class EventCorrelation(Function):
             ON comb_unique.Actor1 = t1.Actor1Geo_CountryCode
             AND comb_unique.Actor2 = t1.Actor2Geo_CountryCode
             AND comb_unique.Date = t1.Date)
-        SELECT t1.Actor1 AS Actor1, 
-               t2.Actor1 AS Actor2,
+        SELECT t1.Actor{role_1} AS Actor1, 
+               t2.Actor{role_1} AS Actor2,
                CORR(t1.AvgCount, t2.AvgCount) AS AvgCountCorr
         FROM filled_table as t1
         CROSS JOIN filled_table as t2
-        WHERE t1.Actor2 = t2.Actor2
+        WHERE t1.Actor{role_2} = t2.Actor{role_2}
         AND t1.Date = t2.Date
-        AND t1.Actor1 < t2.Actor1
-        GROUP BY t1.Actor1, t2.Actor1
+        AND t1.Actor{role_1} < t2.Actor{role_1}
+        GROUP BY t1.Actor{role_1}, t2.Actor{role_1}
         HAVING NOT IS_NAN(AvgCountCorr)
         ORDER BY AvgCountCorr DESC
         LIMIT 10
@@ -61,7 +63,11 @@ class EventCorrelation(Function):
 
     def get_plot(self, parameters):
         qe = QueryExecutor()
-        query = self.query.format(month=parameters['month'].value)
+        query = self.query.format(
+            month=parameters['month'].value,
+            role_1=parameters['actor_type'].value,
+            role_2=(3 - parameters['actor_type'].value),
+        )
         df = qe.get_result_dataframe(query)
         df = df.iloc[::-1]
         df['Actor1'] = df['Actor1'].map(Utils().get_fips_country_id_to_name_mapping())
@@ -85,14 +91,20 @@ class EventCorrelation(Function):
 
     @staticmethod
     def get_parameters():
+        actor_to_id_mapping = pd.Series(['Actor 1', 'Actor 2'], index=[1, 2])
+        ActorTypeParameter = type("ActorTypeParameter",
+                                  (GenericCategoryParameter,),
+                                  {"id_to_name_mapping": actor_to_id_mapping})
         return [
             (MonthParameter, ('month', 'Month')),
+            (ActorTypeParameter, ('actor_type', 'Country role')),
         ]
 
     @staticmethod
     def get_default_parameters():
         return {
             'month': "201905",
+            'actor_type': 1,
         }
 
     @staticmethod

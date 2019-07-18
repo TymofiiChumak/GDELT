@@ -12,10 +12,12 @@ def make_card(name, label, description):
         <h5 class="card-header">
             {0}
         </h5>
-        <div class="card-body">
-            <p class="card-text">
-                {1}
-            </p>
+        <div class="overflow-auto" style="height: 100%">
+            <div class="card-body">
+                <p class="card-text">
+                    {1}
+                </p>
+            </div>
         </div>
         <div class="card-footer">
             <a href="/set_parameters/{2}" class="btn btn-info" role="button">GO</a>

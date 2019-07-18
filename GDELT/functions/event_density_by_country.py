@@ -13,7 +13,7 @@ import pandas as pd
 
 class EventDensityByCountry(Function):
     def _build_qeury(self, params):
-        query = """SELECT ActionGeo_Lat AS lat, ActionGeo_Long AS lon, COUNT(*) AS EventCount
+        query = """SELECT ActionGeo_Lat AS lat, ActionGeo_Long AS lon, COUNT(*) AS Target
         FROM `gdelt-bq.full.events`
         WHERE SQLDATE >= {0}
         AND SQLDATE < {1}
@@ -44,7 +44,7 @@ class EventDensityByCountry(Function):
         df = df[(df.lon >= min_lon) & (df.lon <= max_lon) & (df.lat >= min_lat) & (df.lat <= max_lat)]
 
         geojson = df_to_geojson(df,
-                                properties=['EventCount'],
+                                properties=['Target'],
                                 lat='lat',
                                 lon='lon',
                                 precision=3)
@@ -52,14 +52,14 @@ class EventDensityByCountry(Function):
         heatmap_color_stops = create_color_stops([0.01, 0.25, 0.5, 0.75, 1], colors='RdPu')
         heatmap_radius_stops = [[0, 1], [14, 70]]
 
-        color_breaks = unique([round(df['EventCount'].quantile(q=x * 0.1), 2) for x in range(2, 10)])
+        color_breaks = unique([round(df['Target'].quantile(q=x * 0.1), 2) for x in range(2, 10)])
         color_stops = create_color_stops(color_breaks, colors='Spectral')
 
         heatmap_weight_stops = create_weight_stops(color_breaks)
 
         viz = HeatmapViz(geojson,
                          access_token=Utils().get_mapbox_token(),
-                         weight_property='EventCount',
+                         weight_property='Target',
                          weight_stops=heatmap_weight_stops,
                          color_stops=heatmap_color_stops,
                          radius_stops=heatmap_radius_stops,

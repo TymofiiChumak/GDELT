@@ -104,7 +104,7 @@
 </script>
 <script src="http://leaverou.github.io/awesomplete/awesomplete.js"></script>
 <script>
-    cat_fields = document.getElementsByClassName("data-multiple");
+    let cat_fields = document.getElementsByClassName("data-multiple");
     for (let i=0; i<cat_fields.length; i++) {
         new Awesomplete(cat_fields[i], {
             filter: function (text, input) {
@@ -116,6 +116,42 @@
             replace: function (text) {
                 var before = this.input.value.match(/^.+;\s*|/)[0];
                 this.input.value = before + text + ";";
+            }
+        });
+    }
+    let drop_down_fields = document.getElementsByClassName("dropdown-input");
+    for (let i=0; i<drop_down_fields.length; i++) {
+        let comboplete = new Awesomplete(drop_down_fields[i], {
+            minChars: 0,
+        });
+        var input_group_append = document.createElement("div");
+        input_group_append.className = "input-group-append";
+
+        var dropdown_btn = document.createElement("button");
+        dropdown_btn.classList.add("btn", "btn-outline-secondary", "awesomplete-dropdown");
+        dropdown_btn.innerText = "▼";
+        dropdown_btn.style.position = "absolute";
+        dropdown_btn.style.top = "0px";
+        dropdown_btn.style.right = "0px";
+        dropdown_btn.style.zIndex = "2";
+
+        input_group_append.appendChild(dropdown_btn);
+
+        let input = comboplete.input;
+        let container = input.parentElement;
+        container.style.position = "relative";
+        container.appendChild(input_group_append);
+
+        dropdown_btn.addEventListener("click", function() {
+            if (comboplete.ul.childNodes.length === 0) {
+                comboplete.minChars = 0;
+                comboplete.evaluate();
+            }
+            else if (comboplete.ul.hasAttribute('hidden')) {
+                comboplete.open();
+            }
+            else {
+                comboplete.close();
             }
         });
     }

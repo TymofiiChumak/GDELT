@@ -23,16 +23,23 @@ class GenericCategoryParameter(TextParameter):
         datalist_id = param_id + "_list"
         datalist = ParameterUtil.get_datalist(cls.id_to_name_mapping.unique(), datalist_id)
         multiple_data = 'data-multiple' if cls._allow_multiple else ''
+        drop_down = 'dropdown-input' if cls.id_to_name_mapping.shape[0] < 10 else ''
         test_form_field = """
-        {4}
+        {datelist}
         <div class="form-group">
-            <label for="{0}" style="width:100%; vertical-align: middle;"> {1} </label>
+            <label for="{param_id}" style="width:100%; vertical-align: middle;"> {label} </label>
             <input type="text" 
-                   class="form-control param awesomplete {5}" 
-                   id="{0}" 
-                   value="{2}" 
-                   list="{3}"/>
-        </div>""".format(param_id, label, default_value, datalist_id, datalist, multiple_data)
+                   class="form-control param awesomplete {multiple_data} {drop_down}" 
+                   id="{param_id}" 
+                   value="{default_value}" 
+                   list="{datelist_id}"/>
+        </div>""".format(param_id=param_id,
+                         label=label,
+                         default_value=default_value,
+                         datelist_id=datalist_id,
+                         datelist=datalist,
+                         multiple_data=multiple_data,
+                         drop_down=drop_down)
         return test_form_field
 
     @classmethod

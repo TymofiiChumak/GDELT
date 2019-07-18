@@ -95,7 +95,7 @@ class CountryConnectionCount(Function):
 
     @staticmethod
     def get_description():
-        return """Description"""
+        return """Most common countries in events with specific country at different positions"""
 
     @staticmethod
     def check_params(params):
