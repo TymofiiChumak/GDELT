@@ -34,10 +34,10 @@ class EventCorrelation(Function):
             (SELECT comb_unique.Actor1 AS Actor1, 
                     comb_unique.Actor2 AS Actor2, 
                     comb_unique.Date AS Date,
-                    IFNULL(t1.AvgCount, 0.0) AS AvgCount
+                    IFNULL(t1.Target, 0.0) AS Target
             FROM comb_unique
             LEFT JOIN
-              (SELECT Actor1Geo_CountryCode, Actor2Geo_CountryCode, SQLDATE as Date, count(*) as AvgCount
+              (SELECT Actor1Geo_CountryCode, Actor2Geo_CountryCode, SQLDATE as Date, {target_type} as Target
               FROM `gdelt-bq.full.events`
               WHERE MonthYear = {month}
               AND NOT Actor1Geo_CountryCode IS NULL
@@ -49,38 +49,55 @@ class EventCorrelation(Function):
             AND comb_unique.Date = t1.Date)
         SELECT t1.Actor{role_1} AS Actor1, 
                t2.Actor{role_1} AS Actor2,
-               CORR(t1.AvgCount, t2.AvgCount) AS AvgCountCorr
+               CORR(t1.Target, t2.Target) AS TargetCorr
         FROM filled_table as t1
         CROSS JOIN filled_table as t2
         WHERE t1.Actor{role_2} = t2.Actor{role_2}
         AND t1.Date = t2.Date
         AND t1.Actor{role_1} < t2.Actor{role_1}
         GROUP BY t1.Actor{role_1}, t2.Actor{role_1}
-        HAVING NOT IS_NAN(AvgCountCorr)
-        ORDER BY AvgCountCorr DESC
+        HAVING NOT IS_NAN(TargetCorr)
+        ORDER BY TargetCorr DESC
         LIMIT 10
         """
 
     def get_plot(self, parameters):
+        target_dict = {
+            1: "COUNT(*)",
+            2: "AVG(AvgTone)",
+            3: "Sum(NumMentions)",
+            4: "AVG(GoldsteinScale)"
+        }
+
         qe = QueryExecutor()
         query = self.query.format(
             month=parameters['month'].value,
             role_1=parameters['actor_type'].value,
             role_2=(3 - parameters['actor_type'].value),
+            target_type=target_dict[parameters['target_type'].value],
         )
         df = qe.get_result_dataframe(query)
         df = df.iloc[::-1]
         df['Actor1'] = df['Actor1'].map(Utils().get_fips_country_id_to_name_mapping())
         df['Actor2'] = df['Actor2'].map(Utils().get_fips_country_id_to_name_mapping())
         df['Country name'] = df['Actor1'] + ' & ' + df['Actor2']
-        df['Correlation coefficient'] = df['AvgCountCorr']
+        df['Correlation coefficient'] = df['TargetCorr']
+
+        target_name_dict = {
+            1: 'Event Count',
+            2: 'Average Tone',
+            3: 'Sum of Mentions',
+            4: 'Average Goldstein scale'
+        }
+
         fig = px.bar(
             data_frame=df,
             x='Correlation coefficient',
             y='Country name',
             text='Country name',
             orientation='h',
-            title="Correlation between number of events of each day to each country for {}".format(
+            title="Correlation between {} of each day to each country for {}".format(
+                target_name_dict[parameters['target_type'].value],
                 Utils().format_months_names([parameters['month'].value])[0]
             ),
         )
@@ -95,9 +112,18 @@ class EventCorrelation(Function):
         ActorTypeParameter = type("ActorTypeParameter",
                                   (GenericCategoryParameter,),
                                   {"id_to_name_mapping": actor_to_id_mapping})
+        type_to_id_mapping = pd.Series(['Event Count',
+                                        'Average Tone',
+                                        'Sum Mentions',
+                                        'Average Goldstein scale'],
+                                       index=[1, 2, 3, 4])
+        TargetTypeParameter = type("TragetTypeParameter",
+                                   (GenericCategoryParameter,),
+                                   {"id_to_name_mapping": type_to_id_mapping})
         return [
             (MonthParameter, ('month', 'Month')),
             (ActorTypeParameter, ('actor_type', 'Country role')),
+            (TargetTypeParameter, ('target_type', 'Measure type')),
         ]
 
     @staticmethod
@@ -105,6 +131,7 @@ class EventCorrelation(Function):
         return {
             'month': "201905",
             'actor_type': 1,
+            'target_type': 1
         }
 
     @staticmethod

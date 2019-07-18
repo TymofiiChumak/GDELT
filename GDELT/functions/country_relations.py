@@ -5,7 +5,7 @@ import numpy as np
 from itertools import product
 from ..utils.utils import QueryExecutor, Utils
 from ..parametrs.date_parameters import MonthRangeParameter
-from ..parametrs.category_parameters import GenericCategoryParameter, FipsCountryParameter
+from ..parametrs.category_parameters import FipsCountryParameter, ActorTypeParameter, TargetTypeParameter
 from .function import Function
 
 
@@ -83,18 +83,6 @@ class CountryRelations(Function):
 
     @staticmethod
     def get_parameters():
-        actor_to_id_mapping = pd.Series(['Actor 1', 'Actor 2'], index=[1, 2])
-        ActorTypeParameter = type("ActorTypeParameter",
-                                  (GenericCategoryParameter,),
-                                  {"id_to_name_mapping": actor_to_id_mapping})
-        type_to_id_mapping = pd.Series(['Event Count',
-                                        'Average Tone',
-                                        'Sum Mentions',
-                                        'Average Goldstein scale'],
-                                       index=[1, 2, 3, 4])
-        TargetTypeParameter = type("TragetTypeParameter",
-                                  (GenericCategoryParameter,),
-                                  {"id_to_name_mapping": type_to_id_mapping})
         return [
             (MonthRangeParameter, ('range', 'Time range')),
             (FipsCountryParameter, ('country_id', 'Country')),
