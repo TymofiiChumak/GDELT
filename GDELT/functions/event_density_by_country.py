@@ -35,9 +35,8 @@ class EventDensityByCountry(Function):
         return query
 
     def get_plot(self, parameters):
-        #qe = QueryExecutor()
-        #df = qe.get_result_dataframe(self._build_qeury(parameters))
-        df = pd.read_csv("tmp.csv")
+        qe = QueryExecutor()
+        df = qe.get_result_dataframe(self._build_qeury(parameters))
 
         min_lon, max_lon = df.lon.quantile([0.01, 0.99])
         min_lat, max_lat = df.lat.quantile([0.01, 0.99])

@@ -2,8 +2,15 @@
 
 ## Set Google Cloud Credentials 
 for using BigQuery API for GDELT database you need to specify 
-account Google Cloud credentials ([Use this page](https://console.cloud.google.com/apis/credentials/serviceaccountkey)).
-Firstly login to you google account. Then as "Service account" choose "New service account".
+account Google Cloud credentials. Firstly [create project](https://console.cloud.google.com/projectcreate).
+Just enter a project name (e.g. "GDELT"), and set location as "No organization".
+
+![](https://github.com/TymofiiChumak/GDELT/raw/develop/readme_images/bigquery3.png)
+![](https://github.com/TymofiiChumak/GDELT/raw/develop/readme_images/bigquery4.png)
+
+Then [use this page](https://console.cloud.google.com/apis/credentials/serviceaccountkey)
+to create a new credentials for project.
+Choose as "Service account" choose "New service account".
 Fill "Service account name" by any name you want. As role select "BigQuery" -> "Big Query User".
 Choose JSON key type. Finally download key file by "Create" button. 
 Rename file as ```google_cloud_credentials.json```, 
@@ -17,7 +24,7 @@ and place it to ```GDELT/resources/google_cloud_credentials.json```.
 
 To use tis app you must have python 3. To install dependencies:
 ```shell
-pip3 install django gunicorn plotly-express google-cloud-bigquery
+pip3 install django plotly-express google-cloud-bigquery folium mapboxgl chart_studio ipython
 ```
 
 ## Run application server 

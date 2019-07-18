@@ -105,7 +105,7 @@ class MonthParameter(Parameter):
         # String must be in format MM/YYYY
         month = date_string[:2]
         year = date_string[3:]
-        month_year = month + year
+        month_year = year + month
         Parameter.__init__(self, month_year)
 
     @staticmethod

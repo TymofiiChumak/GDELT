@@ -7,6 +7,7 @@ from .coutry_connection_count import CountryConnectionCount
 from .event_count_by_country import EventCountByCountry
 from .event_density_by_country import EventDensityByCountry
 from .event_density_timeline import EventDensityTimeline
+from .events_corelation import EventCorrelation
 
 
 class FunctionUtil(metaclass=Singleton):
@@ -18,7 +19,8 @@ class FunctionUtil(metaclass=Singleton):
             ('country_connection_count', CountryConnectionCount()),
             ('event_count_by_country', EventCountByCountry()),
             ('event_density_by_country', EventDensityByCountry()),
-            ('event_density_timeline', EventDensityTimeline())
+            ('event_density_timeline', EventDensityTimeline()),
+            ('event_correlation', EventCorrelation())
         ]
 
     def get_function_by_name(self, function_name):

@@ -1,2 +1,6 @@
 venv/*
 .idea/*
+*.pyc
+GDELT/resources/google_cloud_credentials.json
+*/__pycache__/*
+GDELT/static/*
