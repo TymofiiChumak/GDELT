@@ -16,6 +16,8 @@ cameo_type = "CAMEO.type.csv"
 fips_country = "FIPS.country.csv"
 fips_region = "FIPS.region.csv"
 fips_iso = "fips-iso-country.csv"
+actor1_geo_count_file = "actor1_geo_count.csv"
+actor2_geo_count_file = "actor2_geo_count.csv"
 
 
 class Singleton(type):
@@ -170,6 +172,23 @@ class Utils:
             month = int(month_year[4:])
             return month_name[month] + ', ' + year
         return list(map(fotmat_month, months))
+
+
+    def get_valid_fips_countries(self, threshold):
+        """
+        :param threshold:
+        :return:
+        FIPS country codes for countries that have
+        more then threshold event counts for both
+        Actor 1 and Actor 2 roles
+        """
+        actor1_geo_count = pd.read_csv(resource_path + '/' + actor1_geo_count_file).dropna()
+        actor2_geo_count = pd.read_csv(resource_path + '/' + actor2_geo_count_file).dropna()
+        a1_countries = set(actor1_geo_count[actor1_geo_count['Count'] >= threshold]['Actor1Geo_CountryCode'])
+        a2_countries = set(actor2_geo_count[actor2_geo_count['Count'] >= threshold]['Actor2Geo_CountryCode'])
+        return list(a1_countries.intersection(a2_countries))
+
+
 
 
     def get_mapbox_token(self):

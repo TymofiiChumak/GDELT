@@ -1,19 +1,22 @@
 from plotly.offline import plot
-import plotly_express as px
+import plotly.graph_objs as go
 from ..utils.utils import QueryExecutor
 from ..parametrs.date_parameters import MonthRangeParameter
 from ..parametrs.category_parameters import CameoCountryParameter, ActorTypeParameter
 from .function import Function
+from ..utils.utils import Utils
+
+import pandas as pd
 
 
-class EventCount(Function):
+class EventBaseType(Function):
     def __init__(self):
         self.query = """
         SELECT MonthYear AS Date, EventRootCode AS EventCode, COUNT(*) AS EventCount
         FROM `gdelt-bq.full.events`
         WHERE MonthYear >= {start}
         AND MonthYear < {end}
-        AND Actor{role}CountryCode = {country}
+        AND Actor{role}CountryCode = "{country}"
         GROUP BY MonthYear, EventRootCode
         ORDER BY MonthYear, EventRootCode
         """
@@ -27,8 +30,35 @@ class EventCount(Function):
             role=parameters['actor_type'].value,
         )
         df = qe.get_result_dataframe(query)
+        df['EventCount'] = df['EventCount'].astype('int32')
+        df['Date'] = df['Date'].astype('int32')
+        event_count_sum = df.groupby("Date")['EventCount'].sum()
+        sum_mask = df['Date'].map(event_count_sum)
+        df['Part'] = df['EventCount'].divide(sum_mask)
 
-        fig = px.line(df, x='Date', y='EventCount')
+        fig = go.Figure()
+        df['Date'] = df['Date'].apply(
+            lambda date: str(int(date / 100)) + "-" + str(int(date % 100)))
+        dates = list(sorted(df['Date'].unique()))
+        for event_type in df['EventCode'].unique():
+            values = df[df['EventCode'] == event_type]['Part']
+
+            fig.add_trace(go.Scatter(
+                x=dates,
+                y=values * 100,
+                hoverinfo='x+y',
+                mode='lines',
+                line=dict(width=1.),
+                stackgroup='one',
+                name=Utils().get_cameo_base_eventcodes_id_to_name_mapping().loc[event_type]
+            ))
+
+        fig.layout.update(
+            showlegend=True,
+            yaxis=dict(
+                type='linear',
+                range=[1, 100],
+                ticksuffix='%'))
         return plot(fig, include_plotlyjs=True, output_type='div')
 
     @staticmethod

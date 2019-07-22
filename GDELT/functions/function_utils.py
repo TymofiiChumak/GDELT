@@ -8,7 +8,8 @@ from .country_relations import CountryRelations
 from .event_density_by_country import EventDensityByCountry
 from .event_density_timeline import EventDensityTimeline
 from .events_corelation import EventCorrelation
-
+from .event_base_type import EventBaseType
+from .clustering import Clustering
 
 class FunctionUtil(metaclass=Singleton):
 
@@ -20,7 +21,9 @@ class FunctionUtil(metaclass=Singleton):
             ('event_count_by_country', CountryRelations()),
             ('event_density_by_country', EventDensityByCountry()),
             ('event_density_timeline', EventDensityTimeline()),
-            ('event_correlation', EventCorrelation())
+            ('event_correlation', EventCorrelation()),
+            ('event_base_type', EventBaseType()),
+            ('clustering', Clustering())
         ]
 
     def get_function_by_name(self, function_name):
