@@ -9,6 +9,7 @@ from .event_density_by_country import EventDensityByCountry
 from .event_density_timeline import EventDensityTimeline
 from .events_corelation import EventCorrelation
 from .event_base_type import EventBaseType
+from .domestic_policy_clustering import DomesticPolicyClustering
 from .clustering import Clustering
 
 class FunctionUtil(metaclass=Singleton):
@@ -23,7 +24,8 @@ class FunctionUtil(metaclass=Singleton):
             ('event_density_timeline', EventDensityTimeline()),
             ('event_correlation', EventCorrelation()),
             ('event_base_type', EventBaseType()),
-            ('clustering', Clustering())
+            ('clustering', Clustering()),
+            ('domestic_policy_clustering', DomesticPolicyClustering())
         ]
 
     def get_function_by_name(self, function_name):

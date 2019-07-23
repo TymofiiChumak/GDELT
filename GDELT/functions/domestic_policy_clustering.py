@@ -1,7 +1,8 @@
 from plotly.offline import plot
 import plotly_express as px
 import pandas as pd
-from sklearn.cluster import Birch, AgglomerativeClustering, KMeans
+import numpy as np
+from sklearn.cluster import Birch, AgglomerativeClustering, KMeans, AffinityPropagation
 
 from ..utils.utils import QueryExecutor, Utils
 from ..parametrs.date_parameters import MonthRangeParameter
@@ -10,19 +11,20 @@ from ..parametrs.base_parameters import IntParameter
 from .function import Function
 
 
-class Clustering(Function):
+class DomesticPolicyClustering(Function):
     def __init__(self):
         self.query = """
-            SELECT Actor1Geo_CountryCode AS Actor1Geo,
-                   Actor2Geo_CountryCode AS Actor2Geo,
-                   SUM(AvgTone * NumMentions) / SUM(NumMentions) * COUNT(*) AS AvgTone
+            SELECT Actor1Geo_CountryCode AS ActorGeo,
+                   Actor1Type1Code AS Type1,
+                   Actor2Type1Code AS Type2,
+                   SUM(AvgTone * NumMentions) / SUM(NumMentions) * count(*) AS AvgTone
             FROM `gdelt-bq.full.events`
             WHERE MonthYear >= {start}
             AND MonthYear < {end}
             AND Actor1Geo_CountryCode IS NOT NULL
-            AND Actor2Geo_CountryCode IS NOT NULL
-            GROUP BY Actor1Geo_CountryCode, Actor2Geo_CountryCode
-            ORDER BY Actor1Geo_CountryCode, Actor2Geo_CountryCode
+            AND Actor1Geo_CountryCode = Actor2Geo_CountryCode 
+            GROUP BY Actor1Geo_CountryCode, Actor1Type1Code, Actor2Type1Code
+            ORDER BY Actor1Geo_CountryCode, Actor1Type1Code, Actor2Type1Code
             """
 
     def get_plot(self, parameters):
@@ -34,20 +36,25 @@ class Clustering(Function):
         df = qe.get_result_dataframe(query)
 
         countries_to_leave = Utils().get_valid_fips_countries(25000)
-        df = df[(df['Actor1Geo'].isin(countries_to_leave)) & (df['Actor2Geo'].isin(countries_to_leave))]
-        df.sort_values(['Actor1Geo', 'Actor2Geo'], inplace=True)
+        df = df[(df['ActorGeo'].isin(countries_to_leave))]
 
-        index = pd.MultiIndex.from_product((countries_to_leave, countries_to_leave),
-                                           names=['Actor1Geo', 'Actor2Geo'])
-        df.index = pd.MultiIndex.from_arrays((df['Actor1Geo'], df['Actor2Geo']),
-                                             names=['Actor1Geo', 'Actor2Geo'])
-        df.drop(['Actor1Geo', 'Actor2Geo'], axis=1, inplace=True)
-        df = df.reindex(index, fill_value=0.0).reset_index()
-        df.sort_values(['Actor1Geo', 'Actor2Geo'], inplace=True)
+        multi_index = pd.MultiIndex.from_product(
+            [df['ActorGeo'].unique(), df['Type1'].unique(), df['Type2'].unique()],
+            names=['ActorGeo', 'Type1', 'Type2'])
+        df.index = pd.MultiIndex.from_arrays(
+            [df['ActorGeo'], df['Type1'], df['Type2']],
+            names=['ActorGeo', 'Type1', 'Type2'])
+        df.drop(['ActorGeo', 'Type1', 'Type2'], axis=1, inplace=True)
+        df = df.reindex(multi_index).reset_index()
+        df.fillna(0., inplace=True)
+        df.sort_values(['ActorGeo', 'Type1', 'Type2'], inplace=True)
+        df.index = np.arange(df.shape[0])
+        df = df[(df.Type1 != 0.0) & df.Type2 != 0.0]
 
-        dist_matrix = df['AvgTone'].values.reshape((-1, df.groupby('Actor1Geo')['Actor2Geo'].count().unique()[0]))
-
-        labels_idx = pd.Series(df['Actor1Geo'].unique(), name='country_id')
+        types_no = np.unique(df.groupby('ActorGeo')['AvgTone'].count())[0]
+        data = df['AvgTone'].values.reshape((-1, types_no))
+        labels = df['ActorGeo'].unique()
+        norm_data = (data - np.mean(data, axis=1)[:, np.newaxis]) / np.std(data, axis=1)[:, np.newaxis]
 
         n_clusters = parameters['n_clusters'].value
 
@@ -67,19 +74,19 @@ class Clustering(Function):
             model = KMeans(
                 n_clusters=n_clusters
             )
+        elif parameters['method'].value == 'affinity_prop':
+            model = AffinityPropagation()
 
-        if parameters['actor_type'].value == 1:
-            clusters = model.fit_predict(dist_matrix)
-        else:
-            clusters = model.fit_predict(dist_matrix.T)
+        clusters = model.fit_predict(norm_data)
+        cluster_df = pd.DataFrame({'country_id': labels, 'cluster_id': clusters})
 
-        cluster_df = pd.concat([pd.Series(clusters, name='cluster_id'), labels_idx], axis=1)
         cluster_df = cluster_df.join(Utils().get_fips_iso_mapping(),
                                      on=['country_id'],
                                      how='right',
                                      ).fillna(-1)
-        cluster_df['country_name'] = cluster_df['country_id'].map(Utils().get_fips_country_id_to_name_mapping())
         cluster_df.rename({'ISO': 'country_iso'}, axis=1, inplace=True)
+        cluster_df['country_name'] = cluster_df['country_id'].map(Utils().get_fips_country_id_to_name_mapping())
+        print(Utils().get_fips_country_id_to_name_mapping()[:5])
 
         fig = px.choropleth(
             cluster_df,
@@ -96,15 +103,14 @@ class Clustering(Function):
 
     @staticmethod
     def get_parameters():
-        clustering_method_mapping = pd.Series(['Agglomerative', 'Britch', 'KMeans'],
-                                              index=['agglomerative', 'britch', 'kmeans'])
+        clustering_method_mapping = pd.Series(['Agglomerative', 'Britch', 'KMeans', 'AffinityPropagation'],
+                                              index=['agglomerative', 'britch', 'kmeans', 'affinity_prop'])
         ClusteringMethodParam = type("ClusteringMethodParam",
                                      (GenericCategoryParameter,),
                                      {"id_to_name_mapping":clustering_method_mapping})
 
         return [
             (MonthRangeParameter, ('range', 'Time range')),
-            (ActorTypeParameter, ('actor_type', 'Country role')),
             (ClusteringMethodParam, ('method', 'Clustering method')),
             (IntParameter, ('n_clusters', 'Clusters number'))
         ]
@@ -113,14 +119,13 @@ class Clustering(Function):
     def get_default_parameters():
         return {
             'range': ("201301", "201906"),
-            'actor_type': 2,
             'method': 'britch',
             'n_clusters': 20,
         }
 
     @staticmethod
     def get_name():
-        return """Countries clustering """
+        return """Domestic policy clustering """
 
     @staticmethod
     def get_description():
@@ -129,8 +134,13 @@ class Clustering(Function):
 
     @staticmethod
     def check_params(params):
-        assert 0 < int(params['n_clusters']) < 260, \
-            ("Wrong number of clusters", 'n_clusters')
+        if params['method'] == 'affinity_prop':
+            assert int(params['n_clusters']) == 0, \
+                ("for Affinity Propagation Number of clusters must be 0", 'n_clusters')
+        else:
+            assert 0 < int(params['n_clusters']) < 260, \
+                ("Wrong number of clusters", 'n_clusters')
+
         return True
 
 
