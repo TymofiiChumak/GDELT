@@ -1,6 +1,3 @@
-from ..utils.utils import Singleton
-
-
 class Parameter:
     """
     Base class for function parameters

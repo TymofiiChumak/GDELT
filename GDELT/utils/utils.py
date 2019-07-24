@@ -1,7 +1,8 @@
 from calendar import month_name
 import pandas as pd
 from google.cloud import bigquery
-from threading import Lock
+import functools
+import threading
 
 resource_path = "GDELT/resources"
 bigquery_credentials = "google_cloud_credentials.json"
@@ -19,6 +20,19 @@ fips_iso = "fips-iso-country.csv"
 actor1_geo_count_file = "actor1_geo_count.csv"
 actor2_geo_count_file = "actor2_geo_count.csv"
 
+lock = threading.Lock()
+
+
+def synchronized(lock):
+    """ Synchronization decorator """
+    def wrapper(f):
+        @functools.wraps(f)
+        def inner_wrapper(*args, **kw):
+            with lock:
+                return f(*args, **kw)
+        return inner_wrapper
+    return wrapper
+
 
 class Singleton(type):
     """
@@ -26,16 +40,15 @@ class Singleton(type):
     should be applied as metaclass
     """
     _instances = {}
-    lock = Lock()
 
+    @synchronized(lock)
     def __call__(cls, *args, **kwargs):
         if cls not in cls._instances:
             cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
         return cls._instances[cls]
 
 
-class QueryExecutor:
-    __metaclass__ = Singleton
+class QueryExecutor(metaclass=Singleton):
     """
     class for execution of BigQuery queries
     """
@@ -87,11 +100,10 @@ class QueryExecutor:
         return (df)
 
 
-class Utils:
+class Utils(metaclass=Singleton):
     """
     Base class for different util functionality
     """
-    __metaclass__ = Singleton
 
     def get_cameo_country_id_to_name_mapping(self):
         """

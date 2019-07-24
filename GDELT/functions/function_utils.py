@@ -13,17 +13,17 @@ from .domestic_policy_clustering import DomesticPolicyClustering
 from .clustering import Clustering
 
 
-class FunctionUtil:
+class FunctionUtil(metaclass=Singleton):
     """
     Util class for handling functions
     """
-    __metaclass__ = Singleton
 
     def __init__(self):
         """
         After creating new Function class it needs to be added into
         self.function_list as tuple pof function name and function instance
         """
+        print("function utils init")
         self.function_pool = FunctionPool(self.get_plot)
         self.function_dict = {
             'event_count': EventCount(),
@@ -100,7 +100,7 @@ class FunctionUtil:
         function.check_params(param_dict)
 
 
-class FunctionPool:
+class FunctionPool():
     """
     Class for handling function execution
     Be aware that each job_id is only shared between thread of one process.
@@ -108,7 +108,6 @@ class FunctionPool:
     as only process has access to its own function pool.
     TODO Move pool to separate server application (maybe new server with REST API)
     """
-    __metaclass__ = Singleton
 
     def __init__(self, fun):
         """

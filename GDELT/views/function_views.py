@@ -57,6 +57,7 @@ def wait_for_plot(request):
         FunctionUtil().function_pool.wait_result(params['job_uuid'])
         return JsonResponse({"status": "ok"})
     except Exception as e:
+        raise e
         return JsonResponse({"status": "error",
                              "message": str(e.args)})
 
@@ -79,5 +80,6 @@ def draw_plot(request, function, job_uuid):
         }
         return render(request, 'plot.html', context)
     except Exception as e:
+        raise e
         return JsonResponse({"status": "error",
                              "message": str(e.args)})
