@@ -18,6 +18,7 @@
     <div class="col-md-2"></div>
 </div>
 <script type="module">
+    // inserting spinner animation into page
     import {Spinner} from '{% static "GDELT/js/spin.js" %}';
     window.onload = function () {
         let opts = {
@@ -46,6 +47,7 @@
         let spinner = new Spinner(opts).spin(target);
         console.log(spinner.el);
     };
+    // Sending wait for function request
     let href = window.location.href.split("/");
     let function_name = href[href.length - 2];
     let job_uuid = href[href.length - 1];

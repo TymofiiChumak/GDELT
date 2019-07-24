@@ -3,7 +3,6 @@ import plotly_express as px
 from ..utils.utils import QueryExecutor
 from ..parametrs.date_parameters import DateRangeParameter
 from .function import Function
-import time
 
 
 class EventCount(Function):
@@ -24,8 +23,6 @@ class EventCount(Function):
         df = qe.get_result_dataframe(query, month_year_cols=['Date'])
         fig = px.line(df, x='Date', y='EventCount')
         return plot(fig, include_plotlyjs=True, output_type='div')
-        # time.sleep(5)
-        # return "<h1>Loaded</h1>"
 
     @staticmethod
     def get_parameters():

@@ -2,6 +2,9 @@ from .parameter import Parameter
 
 
 class TextParameter(Parameter):
+    """
+    Base parameter class for text/string value
+    """
     def __init__(self, value):
         Parameter.__init__(self, value)
 

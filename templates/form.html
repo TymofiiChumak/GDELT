@@ -33,6 +33,7 @@
 </div>
 <script>
     document.getElementById("SubmitButton").onclick = openPlot;
+    // processing response on parameter check request
     function processResponse(xhr) {
         return function() {
             let json = JSON.parse(xhr.responseText);
@@ -52,6 +53,7 @@
             }
         }
     }
+    // Making function plot request with parameters as body
     function openPlot() {
         var request = {};
         let params = document.getElementsByClassName("param");
@@ -91,6 +93,7 @@
     for (let i=0; i<floatParameters.length; i++){
         setInputFilter(floatParameters[i], floatFilter);
     }
+    // submit form by pressing enter
     let parameters = document.getElementsByClassName("param");
     for (let i=0; i<parameters.length; i++){
         if (!parameters[i].classList.contains("awesomplete")) {
@@ -104,6 +107,7 @@
 </script>
 <script src="http://leaverou.github.io/awesomplete/awesomplete.js"></script>
 <script>
+    // adding supporting of multiple input values into categorical field
     let cat_fields = document.getElementsByClassName("data-multiple");
     for (let i=0; i<cat_fields.length; i++) {
         new Awesomplete(cat_fields[i], {
@@ -119,6 +123,7 @@
             }
         });
     }
+    // adding dropdown button for categorical fields with small number of possible values (<10)
     let drop_down_fields = document.getElementsByClassName("dropdown-input");
     for (let i=0; i<drop_down_fields.length; i++) {
         let comboplete = new Awesomplete(drop_down_fields[i], {

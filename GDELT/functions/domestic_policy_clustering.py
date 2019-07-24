@@ -6,7 +6,7 @@ from sklearn.cluster import Birch, AgglomerativeClustering, KMeans, AffinityProp
 
 from ..utils.utils import QueryExecutor, Utils
 from ..parametrs.date_parameters import MonthRangeParameter
-from ..parametrs.category_parameters import ActorTypeParameter, GenericCategoryParameter
+from ..parametrs.category_parameters import GenericCategoryParameter
 from ..parametrs.base_parameters import IntParameter
 from .function import Function
 

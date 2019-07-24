@@ -3,6 +3,11 @@ from calendar import monthrange
 
 
 class DateTimeParameter(Parameter):
+    """
+    Class for date parameter
+    Date must be in MM/DD/YYYY
+    Returns date in format YYYYMMYY (the same as SQLDATE column)
+    """
     def __init__(self, date_string):
         # String must be in format MM/DD/YYYY
         month = date_string[:2]
@@ -50,6 +55,11 @@ class DateTimeParameter(Parameter):
 
 
 class DateRangeParameter(DateTimeParameter):
+    """
+    Class for date range parameter
+    Date must be in MM/DD/YYYY;MM/DD/YYYY
+    Returns tuple of dates in format ("YYYYMMYY", "YYYYMMYY") (the same as SQLDATE column)
+    """
     def __init__(self, value):
         # String must be in format MM/DD/YYYY
         sql_format = lambda date: date[6:] + date[:2] + date[3:5]
@@ -101,6 +111,11 @@ class DateRangeParameter(DateTimeParameter):
 
 
 class MonthParameter(Parameter):
+    """
+    Class for month parameter
+    Date must be in MM/YYYY
+    Returns date in format YYYYMM (the same as MonthYear column)
+    """
     def __init__(self, date_string):
         # String must be in format MM/YYYY
         month = date_string[:2]
@@ -146,6 +161,11 @@ class MonthParameter(Parameter):
 
 
 class MonthRangeParameter(Parameter):
+    """
+    Class for month range parameter
+    Date must be in MM/YYYY;MM/YYYY
+    Returns tuple of months in format ("YYYYMM", "YYYYMM") (the same as MonthYear column)
+    """
     def __init__(self, value):
         # String must be in format MM/YYYY
         date1, date2 = value.split(';')
@@ -192,5 +212,98 @@ class MonthRangeParameter(Parameter):
                 raise AssertionError("Wrong number format")
         assert len(value) == 15, "Wrong date length"
         assert value[7] == ';' and value.count(';') == 1, 'Wrong date format'
+        data1, data2 = value.split(';')
+        return check_month(data1) and check_month(data2)
+
+
+class YearParameter(Parameter):
+    """
+    Class for year parameter
+    Date must be in YYYY
+    Returns date in format YYYY (the same as Year column)
+    """
+    def __init__(self, year):
+        # String must be in format YYYY
+        Parameter.__init__(self, year)
+
+    @staticmethod
+    def get_field_code(params, default_value):
+        param_id, label = params
+        test_form_field = """
+        <div class="form-group">
+            <label for="{0}"> {1} </label>
+        <input type="text" 
+               class="form-control param datepicker-here" 
+               data-language='en'
+               data-min-view="years" 
+               data-view="years"
+               data-date-format="yyyy"
+               id="{0}" 
+               value={2}>
+        </div>""".format(param_id, label, default_value)
+        return test_form_field
+
+    @staticmethod
+    def get_value_from_default(value):
+        return value
+
+    @staticmethod
+    def check_params(date_string):
+        assert len(date_string) == 4, "Wrong date length"
+        try:
+            year = int(date_string)
+            assert 1979 <= year <= 2019, 'Wrong year'
+        except ValueError as e:
+            raise AssertionError("Wrong number format")
+        return True
+
+
+class YearRangeParameter(Parameter):
+    """
+    Class for year range parameter
+    Date must be in YYYY;YYYY
+    Returns tuple of months in format ("YYYYMM", "YYYYMM") (the same as MonthYear column)
+    """
+    def __init__(self, value):
+        # String must be in format MM/YYYY
+        date1, date2 = value.split(';')
+        Parameter.__init__(self, (date1, date2))
+
+    @staticmethod
+    def get_field_code(params, default_value):
+        param_id, label = params
+        test_form_field = """
+        <div class="form-group">
+            <label for="{0}"> {1} </label>
+        <input type="text" 
+               class="form-control param datepicker-here" 
+               data-language='en'
+               data-min-view="years" 
+               data-range="true"
+               data-multiple-dates-separator=";"
+               data-view="years"
+               data-date-format="yyyy"
+               id="{0}" 
+               value={2}>
+        </div>""".format(param_id, label, default_value)
+        return test_form_field
+
+    @staticmethod
+    def get_value_from_default(value):
+        year1 = value[0]
+        year2 = value[1]
+        return year1 + ';' + year2
+
+    @staticmethod
+    def check_params(value):
+        def check_month(date_string):
+            assert len(date_string) == 4, "Wrong date length"
+            try:
+                year = int(date_string)
+                assert 1979 <= year <= 2019, 'Wrong year'
+            except ValueError as e:
+                raise AssertionError("Wrong number format")
+        assert len(value) == 9, "Wrong date length"
+        assert value[4] == ';' and value.count(';') == 1, 'Wrong date format'
         data1, data2 = value.split(';')
         return check_month(data1) and check_month(data2)

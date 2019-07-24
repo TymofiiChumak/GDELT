@@ -2,6 +2,9 @@ from .parameter import Parameter
 
 
 class IntParameter(Parameter):
+    """
+    Base parameter class for int value
+    """
     def __init__(self, value):
         Parameter.__init__(self, int(value))
 
@@ -29,6 +32,9 @@ class IntParameter(Parameter):
 
 
 class FloatParameter(Parameter):
+    """
+    Base parameter class for float value
+    """
     def __init__(self, value):
         Parameter.__init__(self, float(value))
 

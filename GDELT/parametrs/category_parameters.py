@@ -1,10 +1,17 @@
 import pandas as pd
-from .parameter import ParameterUtil, Parameter
+from .parameter import Parameter
 from .text_parameter import TextParameter
 from ..utils.utils import Utils
 
 
 class GenericCategoryParameter(TextParameter):
+    """
+    Generic type for category parameters.
+    Is needed to set id_to_name_mapping attribute (dynamically, or by inheritance).
+    id_to_name_mapping - pandas Series with values witch be displayed and indexes with be returned.
+    i.e. if index is "US" and value is "United States", user must write "United states"
+    but "US" will be returned
+    """
     _allow_multiple = False
     _allow_all = False
     _allow_null = False
@@ -21,7 +28,7 @@ class GenericCategoryParameter(TextParameter):
     def get_field_code(cls, params, default_value):
         param_id, label = params
         datalist_id = param_id + "_list"
-        datalist = ParameterUtil.get_datalist(cls.id_to_name_mapping.unique(), datalist_id)
+        datalist = cls._get_datalist(cls.id_to_name_mapping.unique(), datalist_id)
         multiple_data = 'data-multiple' if cls._allow_multiple else ''
         drop_down = 'dropdown-input' if cls.id_to_name_mapping.shape[0] < 10 else ''
         test_form_field = """
@@ -62,6 +69,15 @@ class GenericCategoryParameter(TextParameter):
 
     @classmethod
     def allow_null(cls, null_name="None", null_index="None"):
+        """
+        Adds null value to possible values of field.
+        Don't change behaviour of base class.
+        Handling of this value must be considered in calling function.
+        :param null_name: null value to be displayed
+        :param null_index: null value to be returned
+        :return: new class with additional "null" value inserted to
+        id_to_name_mapping attribute
+        """
         new_id_to_name_mapping = cls.id_to_name_mapping.copy()
         new_id_to_name_mapping.at[null_index] = null_name
         return type(cls.__name__ + "_null",
@@ -75,6 +91,15 @@ class GenericCategoryParameter(TextParameter):
 
     @classmethod
     def allow_all(cls, all_name="All", all_index="All"):
+        """
+        Adds all value to possible values of field.
+        Don't change behaviour of base class.
+        Handling of this value must be considered in calling function.
+        :param all_name: all value to be displayed
+        :param all_index: all value to be returned
+        :return: new class with additional "all" value inserted to
+        id_to_name_mapping attribute
+        """
         new_id_to_name_mapping = cls.id_to_name_mapping.copy()
         new_id_to_name_mapping.at[all_index] = all_name
         return type(cls.__name__ + "_all",
@@ -88,9 +113,29 @@ class GenericCategoryParameter(TextParameter):
 
     @classmethod
     def allow_multiple(cls):
+        """
+        Allows multiple values inserted into param filed.
+        After applying "value" attribute becomes list of values.
+        Values in input field must be divided by ";"
+        :return:
+        """
         return type(cls.__name__ + "_mul",
                     (cls,),
-                    { "_allow_multiple": True})
+                    {"_allow_multiple": True})
+
+    @staticmethod
+    def _get_datalist(elements, name):
+        """
+        "private" method to create html datalist in propose of autocomplete
+        :param elements: list of string values
+        :param name: id of field
+        :return: html datalist node
+        """
+        datalist = """<datalist id="{}">""".format(name)
+        for element in elements:
+            datalist += "<option>" + str(element) + "</option>"
+        datalist += "</datalist>"
+        return datalist
 
 
 CameoCountryParameter = type("CameoCountryParameter",
@@ -128,9 +173,14 @@ FipsCountryParameter = type("FipsCountryParameter",
                             {"id_to_name_mapping": Utils().get_fips_country_id_to_name_mapping()})
 
 
+quad_class_mapping = pd.Series(
+    ['Verbal Cooperation', 'Material Cooperation', 'Verbal Conflict', 'Material Conflict'],
+    index=[1, 2, 3, 4]
+)
+
 QuadClassParameter = type("QuadClassParameter",
                           (GenericCategoryParameter,),
-                          {"id_to_name_mapping": Utils().get_quad_class_mapping()})
+                          {"id_to_name_mapping": quad_class_mapping})
 
 
 # FipsRegionParameter = type("FipsRegionParameter",
@@ -142,7 +192,6 @@ actor_to_id_mapping = pd.Series(['Actor 1', 'Actor 2'], index=[1, 2])
 ActorTypeParameter = type("ActorTypeParameter",
                           (GenericCategoryParameter,),
                           {"id_to_name_mapping": actor_to_id_mapping})
-
 
 
 type_to_id_mapping = pd.Series(['Event Count',

@@ -7,6 +7,12 @@ fu = FunctionUtil()
 
 
 def make_card(name, label, description):
+    """
+    :param name: name of function
+    :param label: name of function to display
+    :param description: description of function
+    :return: html code of card to embed into page
+    """
     card = """
     <div class="card" style="height: 250px">
         <h5 class="card-header">
@@ -27,6 +33,10 @@ def make_card(name, label, description):
 
 
 def make_row(descs):
+    """
+    :param descs: descriptions of 4 functions
+    :return: html code of row with four cards to embed into page
+    """
     descs += [None] * (4 - len(descs))
     row = """<div class="row">"""
     for desc in descs:
@@ -40,6 +50,11 @@ def make_row(descs):
 
 
 def make_rows(descs):
+    """
+    :param descs: descriptions of all functions
+    list os tuples (function name, function name to display, function description)
+    :return: html code to embed into page
+    """
     rows = ""
     rows_no = int(len(descs) / 4) + (len(descs) % 4  > 0)
     for i in range(rows_no):
@@ -47,8 +62,11 @@ def make_rows(descs):
 
 
 def main_index(request):
-
-    card_rows = mark_safe(make_row(fu.get_function_description()))
+    """
+    :param request: GET request with empty body
+    :return: html code for main page with cards inserted
+    """
+    card_rows = mark_safe(make_row(fu.get_functions_description()))
     context = {
         'cards': card_rows
     }

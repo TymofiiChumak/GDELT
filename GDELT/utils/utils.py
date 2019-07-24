@@ -21,6 +21,10 @@ actor2_geo_count_file = "actor2_geo_count.csv"
 
 
 class Singleton(type):
+    """
+    implementation of singleton pattern
+    should be applied as metaclass
+    """
     _instances = {}
     lock = Lock()
 
@@ -30,7 +34,11 @@ class Singleton(type):
         return cls._instances[cls]
 
 
-class QueryExecutor(metaclass=Singleton):
+class QueryExecutor:
+    __metaclass__ = Singleton
+    """
+    class for execution of BigQuery queries
+    """
 
     def __init__(self):
         self.client = bigquery.Client.from_service_account_json(
@@ -41,6 +49,20 @@ class QueryExecutor(metaclass=Singleton):
                              index_col_name=None,
                              datetime_cols=None,
                              month_year_cols=None):
+        """
+        :param query: string query for execution
+        :param index_col_name: list of string names of columns
+        which will be a index for dataframe
+        :param datetime_cols: list of string names of columns
+        which will be parsed as pd.Timestamp.
+        Time format is the same as SQLDATA column: YYYYMMDD
+        :param month_year_cols: list of string names of columns
+        which will be parsed as pd.Timestamp.
+        Time format is the same as MonthYear column: YYYYMM.
+        Will be parsed as first day of month
+        :return:
+        pandas DataFrame with result of query
+        """
         query_job = self.client.query(query)
         rows = []
         for row in query_job:
@@ -66,9 +88,16 @@ class QueryExecutor(metaclass=Singleton):
 
 
 class Utils:
+    """
+    Base class for different util functionality
+    """
     __metaclass__ = Singleton
 
     def get_cameo_country_id_to_name_mapping(self):
+        """
+        :return: pandas Series with country name as values
+        and CAMEO country codes as index
+        """
         if hasattr(self, "cameo_country_id_to_name_mapping"):
             return self.cameo_country_id_to_name_mapping
         else:
@@ -78,6 +107,10 @@ class Utils:
             return self.cameo_country_id_to_name_mapping
 
     def get_cameo_ethnic_id_to_name_mapping(self):
+        """
+        :return: pandas Series with ethnic name as values
+        and CAMEO ethnic codes as indexes
+        """
         if hasattr(self, "cameo_ethnic_id_to_name_mapping"):
             return self.cameo_ethnic_id_to_name_mapping
         else:
@@ -87,6 +120,10 @@ class Utils:
             return self.cameo_ethnic_id_to_name_mapping
 
     def get_cameo_eventcodes_id_to_name_mapping(self):
+        """
+        :return: pandas Series with event name as values
+        and CAMEO event codes as indexes
+        """
         if hasattr(self, "cameo_eventcodes_id_to_name_mapping"):
             return self.cameo_eventcodes_id_to_name_mapping
         else:
@@ -96,6 +133,11 @@ class Utils:
             return self.cameo_eventcodes_id_to_name_mapping
 
     def get_cameo_eventcodes_id_to_base_mapping(self):
+        """
+        :return: pandas Series with root event code as values
+        and CAMEO event codes as indexes
+        i.e. 021: Appeal for material cooperation -> 02: APPEAL
+        """
         if hasattr(self, "cameo_eventcodes_id_to_name_mapping"):
             return self.cameo_eventcodes_id_to_base_mapping
         else:
@@ -106,6 +148,10 @@ class Utils:
             return self.cameo_eventcodes_id_to_base_mapping
 
     def get_cameo_base_eventcodes_id_to_name_mapping(self):
+        """
+        :return: pandas Series with root event name as values
+        and CAMEO event codes as indexes
+        """
         if hasattr(self, "cameo_eventcodes_id_to_name_mapping"):
             return self.cameo_base_eventcodes_id_to_name_mapping
         else:
@@ -117,6 +163,10 @@ class Utils:
 
 
     def get_cameo_knowngroups_id_to_name_mapping(self):
+        """
+        :return: pandas Series with known group name as values
+        and CAMEO known group code as indexes
+        """
         if hasattr(self, "cameo_knowngroups_id_to_name_mapping"):
             return self.cameo_knowngroups_id_to_name_mapping
         else:
@@ -126,6 +176,10 @@ class Utils:
             return self.cameo_knowngroups_id_to_name_mapping
 
     def get_cameo_religion_id_to_name_mapping(self):
+        """
+        :return: pandas Series with religion name as values
+        and CAMEO religion code as indexes
+        """
         if hasattr(self, "cameo_religion_id_to_name_mapping"):
             return self.cameo_religion_id_to_name_mapping
         else:
@@ -135,6 +189,10 @@ class Utils:
             return self.cameo_religion_id_to_name_mapping
 
     def get_fips_country_id_to_name_mapping(self):
+        """
+        :return: pandas Series with country name as values
+        and FIPS country code as indexes
+        """
         if hasattr(self, "fips_country_id_to_name_mapping"):
             return self.fips_country_id_to_name_mapping
         else:
@@ -146,6 +204,10 @@ class Utils:
             return self.fips_country_id_to_name_mapping
 
     def get_fips_region_id_to_name_mapping(self):
+        """
+        :return: pandas Series with region name as values
+        and FIPS region code as indexes
+        """
         if hasattr(self, "fips_region_id_to_name_mapping"):
             return self.fips_region_id_to_name_mapping
         else:
@@ -155,17 +217,22 @@ class Utils:
             return self.fips_region_id_to_name_mapping
 
     def get_fips_iso_mapping(self):
+        """
+        :return: pandas Series with FIPS country code as values
+        and ISO alpha-3 country code as indexes
+        """
         if hasattr(self, "fips_iso_mapping"):
             return self.fips_iso_mapping
         else:
             self.fips_iso_mapping = pd.read_csv(resource_path + '/' + fips_iso, index_col='FIPS')['ISO']
             return self.fips_iso_mapping
 
-    def get_quad_class_mapping(self):
-        return pd.Series(['Verbal Cooperation', 'Material Cooperation', 'Verbal Conflict', 'Material Conflict'],
-                         index=[1, 2, 3, 4])
-
     def format_months_names(self, months):
+        """
+        :param months: List of strings of months in
+        format YYYYMM (the same as MonthYear column)
+        :return: List of months in human-readable format
+        """
         def fotmat_month(month_year):
             month_year = str(int(month_year))
             year = month_year[:4]
@@ -188,10 +255,11 @@ class Utils:
         a2_countries = set(actor2_geo_count[actor2_geo_count['Count'] >= threshold]['Actor2Geo_CountryCode'])
         return list(a1_countries.intersection(a2_countries))
 
-
-
-
     def get_mapbox_token(self):
+        """
+        :return: string token for mapbox library
+        Watch README.md for instructions for getting token
+        """
         if hasattr(self, "mapbox_token"):
             return self.mapbox_token
         else:
