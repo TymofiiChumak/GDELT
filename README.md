@@ -36,11 +36,6 @@ To use virtual environment:
 ```shell
 /venv/bin/python manage.py runserver
 ```
-To use docker:
-```shell
-docker build -t gdelt-web-app Docker/
-docker run --rm -v $(pwd):/home/gdelt -p 8000:8000 gdelt-web-app
-```
 
 ## Mapbox access token
 If you want to use your own mapbox account, you need to place 

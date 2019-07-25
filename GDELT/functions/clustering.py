@@ -1,6 +1,7 @@
 from plotly.offline import plot
 import plotly_express as px
 import pandas as pd
+import numpy as np
 from sklearn.cluster import Birch, AgglomerativeClustering, KMeans
 
 from ..utils.utils import QueryExecutor, Utils
@@ -13,16 +14,31 @@ from .function import Function
 class Clustering(Function):
     def __init__(self):
         self.query = """
-            SELECT Actor1Geo_CountryCode AS Actor1Geo,
-                   Actor2Geo_CountryCode AS Actor2Geo,
-                   SUM(AvgTone * NumMentions) / SUM(NumMentions) * COUNT(*) AS AvgTone
-            FROM `gdelt-bq.full.events`
-            WHERE MonthYear >= {start}
-            AND MonthYear < {end}
-            AND Actor1Geo_CountryCode IS NOT NULL
-            AND Actor2Geo_CountryCode IS NOT NULL
-            GROUP BY Actor1Geo_CountryCode, Actor2Geo_CountryCode
-            ORDER BY Actor1Geo_CountryCode, Actor2Geo_CountryCode
+            SELECT e.Actor1Geo_CountryCode AS Actor1Geo,
+                   e.Actor2Geo_CountryCode AS Actor2Geo,
+                   SUM((0.5 * e.AvgTone + e.GoldsteinScale) * e.NumMentions) / SUM(e.NumMentions) * COUNT(*) 
+                   / SQRT(AVG(a1.Actor1Count) * AVG(a2.Actor2Count)) * 1000 AS AvgTone
+            FROM `gdelt-bq.full.events` AS e
+            LEFT JOIN
+              (SELECT Actor1Geo_CountryCode AS Actor1, COUNT(*) Actor1Count
+               FROM `gdelt-bq.full.events`
+               WHERE MonthYear >= {start}
+               AND MonthYear < {end}
+               GROUP BY Actor1Geo_CountryCode) AS a1
+            ON e.Actor1Geo_CountryCode = a1.Actor1
+            LEFT JOIN
+              (SELECT Actor2Geo_CountryCode AS Actor2, COUNT(*) Actor2Count
+               FROM `gdelt-bq.full.events`
+               WHERE MonthYear >= {start}
+               AND MonthYear < {end}
+               GROUP BY Actor2Geo_CountryCode) AS a2
+            ON e.Actor2Geo_CountryCode = a2.Actor2
+            WHERE e.MonthYear >= {start}
+            AND e.MonthYear < {end}
+            AND e.Actor1Geo_CountryCode IS NOT NULL
+            AND e.Actor2Geo_CountryCode IS NOT NULL
+            GROUP BY e.Actor1Geo_CountryCode, e.Actor2Geo_CountryCode
+            ORDER BY e.Actor1Geo_CountryCode, e.Actor2Geo_CountryCode
             """
 
     def get_plot(self, parameters):
@@ -46,6 +62,9 @@ class Clustering(Function):
         df.sort_values(['Actor1Geo', 'Actor2Geo'], inplace=True)
 
         dist_matrix = df['AvgTone'].values.reshape((-1, df.groupby('Actor1Geo')['Actor2Geo'].count().unique()[0]))
+
+        down_limit, up_limit = np.percentile(dist_matrix, (1, 99))
+        dist_matrix = np.clip(dist_matrix, down_limit, up_limit)
 
         labels_idx = pd.Series(df['Actor1Geo'].unique(), name='country_id')
 
@@ -80,6 +99,8 @@ class Clustering(Function):
                                      ).fillna(-1)
         cluster_df['country_name'] = cluster_df['country_id'].map(Utils().get_fips_country_id_to_name_mapping())
         cluster_df.rename({'ISO': 'country_iso'}, axis=1, inplace=True)
+        # Uncomment to write result to csv
+        # cluster_df.to_csv('clustering_result.csv')
 
         fig = px.choropleth(
             cluster_df,
@@ -90,7 +111,7 @@ class Clustering(Function):
             hover_data=['cluster_id'],
             labels={'country_name': 'Country Name',
                     'cluster_id': 'Cluster ID'},
-            color_continuous_scale=px.colors.colorbrewer.Paired,
+            color_continuous_scale=px.colors.qualitative.Alphabet,
         )
         return plot(fig, include_plotlyjs=True, output_type='div')
 
