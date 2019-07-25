@@ -14,17 +14,44 @@ from .function import Function
 class DomesticPolicyClustering(Function):
     def __init__(self):
         self.query = """
-            SELECT Actor1Geo_CountryCode AS ActorGeo,
-                   Actor1Type1Code AS Type1,
-                   Actor2Type1Code AS Type2,
-                   SUM(AvgTone * NumMentions) / SUM(NumMentions) * count(*) AS AvgTone
-            FROM `gdelt-bq.full.events`
-            WHERE MonthYear >= {start}
-            AND MonthYear < {end}
-            AND Actor1Geo_CountryCode IS NOT NULL
-            AND Actor1Geo_CountryCode = Actor2Geo_CountryCode 
-            GROUP BY Actor1Geo_CountryCode, Actor1Type1Code, Actor2Type1Code
-            ORDER BY Actor1Geo_CountryCode, Actor1Type1Code, Actor2Type1Code
+            SELECT e.Actor1Geo_CountryCode AS ActorGeo,
+                   e.Actor1Type1Code AS Type1,
+                   e.Actor2Type1Code AS Type2,
+                   SUM((0.5 * e.AvgTone + e.GoldsteinScale) * e.NumMentions) / SUM(e.NumMentions) * COUNT(*) 
+                   / SQRT(AVG(t1.Type1Count) * AVG(t2.Type2Count)) * 1000 AS AvgTone
+            FROM `gdelt-bq.full.events` AS e
+            LEFT JOIN
+              (SELECT Actor1Geo_CountryCode AS Actor, Actor1Type1Code AS Type1, COUNT(*) Type1Count
+               FROM `gdelt-bq.full.events`
+               WHERE MonthYear >= {start}
+               AND MonthYear < {end}
+                AND Actor1Geo_CountryCode IS NOT NULL
+                AND Actor1Geo_CountryCode = Actor2Geo_CountryCode 
+                AND Actor1Type1Code IS NOT NULL
+                AND Actor2Type1Code IS NOT NULL
+               GROUP BY Actor1Geo_CountryCode, Actor1Type1Code) AS t1
+            ON e.Actor1Geo_CountryCode = t1.Actor
+            AND e.Actor1Type1Code = t1.Type1
+            LEFT JOIN
+              (SELECT Actor1Geo_CountryCode AS Actor, Actor2Type1Code AS Type2, COUNT(*) Type2Count
+               FROM `gdelt-bq.full.events`
+               WHERE MonthYear >= {start}
+               AND MonthYear < {end}
+                AND Actor1Geo_CountryCode IS NOT NULL
+                AND Actor1Geo_CountryCode = Actor2Geo_CountryCode 
+                AND Actor1Type1Code IS NOT NULL
+                AND Actor2Type1Code IS NOT NULL
+               GROUP BY Actor1Geo_CountryCode, Actor2Type1Code) AS t2
+            ON e.Actor1Geo_CountryCode = t2.Actor
+            AND e.Actor1Type1Code = t2.Type2
+            WHERE e.MonthYear >= {start}
+            AND e.MonthYear < {end}
+            AND e.Actor1Geo_CountryCode IS NOT NULL
+            AND e.Actor1Geo_CountryCode = e.Actor2Geo_CountryCode 
+            AND e.Actor1Type1Code IS NOT NULL
+            AND e.Actor2Type1Code IS NOT NULL
+            GROUP BY e.Actor1Geo_CountryCode, e.Actor1Type1Code, e.Actor2Type1Code
+            ORDER BY e.Actor1Geo_CountryCode, e.Actor1Type1Code, e.Actor2Type1Code
             """
 
     def get_plot(self, parameters):
@@ -86,7 +113,8 @@ class DomesticPolicyClustering(Function):
                                      ).fillna(-1)
         cluster_df.rename({'ISO': 'country_iso'}, axis=1, inplace=True)
         cluster_df['country_name'] = cluster_df['country_id'].map(Utils().get_fips_country_id_to_name_mapping())
-        print(Utils().get_fips_country_id_to_name_mapping()[:5])
+        # Uncomment to write result to csv
+        # cluster_df.groupby('cluster_id')['country_name'].apply(lambda countries: '; '.join(countries)).to_csv('clustering_result.csv')
 
         fig = px.choropleth(
             cluster_df,
@@ -97,7 +125,7 @@ class DomesticPolicyClustering(Function):
             hover_data=['cluster_id'],
             labels={'country_name': 'Country Name',
                     'cluster_id': 'Cluster ID'},
-            color_continuous_scale=px.colors.colorbrewer.Paired,
+            color_continuous_scale=px.colors.qualitative.Alphabet,
         )
         return plot(fig, include_plotlyjs=True, output_type='div')
 

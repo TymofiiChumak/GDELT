@@ -100,7 +100,7 @@ class Clustering(Function):
         cluster_df['country_name'] = cluster_df['country_id'].map(Utils().get_fips_country_id_to_name_mapping())
         cluster_df.rename({'ISO': 'country_iso'}, axis=1, inplace=True)
         # Uncomment to write result to csv
-        # cluster_df.to_csv('clustering_result.csv')
+        # cluster_df.groupby('cluster_id')['country_name'].apply(lambda countries: '; '.join(countries)).to_csv('clustering_result.csv')
 
         fig = px.choropleth(
             cluster_df,

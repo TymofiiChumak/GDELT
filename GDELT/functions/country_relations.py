@@ -64,7 +64,7 @@ class CountryRelations(Function):
         filled = df.join(filler.groupby(columns).count(), on=columns, how='right')[columns + [target_col_name]]
         filled[target_col_name].fillna(0.0, inplace=True)
 
-
+        color_bounds = filled[target_col_name].min(), filled[target_col_name].max()
 
         fig = px.choropleth(
             filled,
@@ -72,6 +72,7 @@ class CountryRelations(Function):
             locationmode='ISO-3',
             color=target_col_name,
             animation_frame='Date',
+            range_color=color_bounds,
             color_continuous_scale=px.colors.sequential.Aggrnyl,
             title="{} for each months between {} as Actor {} and other countries".format(
                 target_name_dict[parameters['target_type'].value],
