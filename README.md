@@ -5,8 +5,8 @@ for using BigQuery API for GDELT database you need to specify
 account Google Cloud credentials. Firstly [create project](https://console.cloud.google.com/projectcreate).
 Just enter a project name (e.g. "GDELT"), and set location as "No organization".
 
-![](https://github.com/TymofiiChumak/GDELT/raw/develop/readme_images/bigquery3.png)
-![](https://github.com/TymofiiChumak/GDELT/raw/develop/readme_images/bigquery4.png)
+![](https://github.com/TymofiiChumak/GDELT/raw/master/readme_images/bigquery3.png)
+![](https://github.com/TymofiiChumak/GDELT/raw/master/readme_images/bigquery4.png)
 
 Then [use this page](https://console.cloud.google.com/apis/credentials/serviceaccountkey)
 to create a new credentials for project.
@@ -16,9 +16,9 @@ Choose JSON key type. Finally download key file by "Create" button.
 Rename file as ```google_cloud_credentials.json```, 
 and place it to ```GDELT/resources/google_cloud_credentials.json```. 
 
-![](https://github.com/TymofiiChumak/GDELT/raw/develop/readme_images/bigquery1.png)
+![](https://github.com/TymofiiChumak/GDELT/raw/master/readme_images/bigquery1.png)
 
-![](https://github.com/TymofiiChumak/GDELT/raw/develop/readme_images/bigquery2.png)
+![](https://github.com/TymofiiChumak/GDELT/raw/master/readme_images/bigquery2.png)
 
 ## Install dependencies
 
